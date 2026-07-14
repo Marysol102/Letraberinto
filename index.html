@@ -158,6 +158,59 @@
     font-size: 12px;
     cursor: pointer;
   }
+
+  .share-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(19, 39, 63, 0.55);
+    backdrop-filter: blur(2px);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .share-overlay.visible { display: flex; }
+  .share-card {
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 28px 26px 22px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: shareIn 0.35s ease;
+  }
+  @keyframes shareIn {
+    from { transform: translateY(16px) scale(0.97); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .share-medal { font-size: 44px; margin-bottom: 4px; }
+  .share-card h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 19px;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  .share-frase {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .share-fuente { font-size: 12px; font-style: italic; color: var(--muted); margin-bottom: 16px; }
+  .share-stats { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; }
+  .share-stat .v { font-size: 20px; font-weight: 800; color: var(--ink); }
+  .share-stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .share-next { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .share-actions { display: flex; gap: 8px; justify-content: center; }
+  .share-actions button {
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+  .share-actions button.secondary { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .share-copied { font-size: 11px; color: var(--good); margin-top: 8px; min-height: 14px; font-weight: 600; }
 </style>
 </head>
 <body>
@@ -191,6 +244,26 @@
   <div class="status" id="status"></div>
   <button class="reset-btn" id="resetBtn">Reiniciar trazo</button>
 
+  <div class="share-overlay" id="shareOverlay">
+    <div class="share-card">
+      <div class="share-medal" id="shareMedal">🥇</div>
+      <h2>¡Escapaste del laberinto!</h2>
+      <div class="share-frase" id="shareFrase"></div>
+      <div class="share-fuente" id="shareFuente"></div>
+      <div class="share-stats">
+        <div class="share-stat"><div class="v" id="shareTime">00:00</div><div class="l">Tiempo</div></div>
+        <div class="share-stat"><div class="v" id="shareHints">0</div><div class="l">Pistas</div></div>
+        <div class="share-stat"><div class="v" id="shareStreak">1</div><div class="l">🔥 Racha</div></div>
+      </div>
+      <div class="share-next" id="shareNext"></div>
+      <div class="share-actions">
+        <button id="shareBtn">Compartir resultado</button>
+        <button class="secondary" id="closeShareBtn">Cerrar</button>
+      </div>
+      <div class="share-copied" id="shareCopied"></div>
+    </div>
+  </div>
+
 <script>
 const PUZZLES_DEMO = [
   {"frase":"Más vale tarde que nunca","fuente":"Refrán popular","filas":5,"cols":4,"bloqueadas":[],"letras":{"2,2":"M","2,3":"A","1,3":"S","0,3":"V","0,2":"A","1,2":"L","1,1":"E","0,1":"T","0,0":"A","1,0":"R","2,0":"D","2,1":"E","3,1":"Q","3,0":"U","4,0":"E","4,1":"N","4,2":"U","3,2":"N","3,3":"C","4,3":"A"},"inicio":[2,2],"solucion":[[2,2],[2,3],[1,3],[0,3],[0,2],[1,2],[1,1],[0,1],[0,0],[1,0],[2,0],[2,1],[3,1],[3,0],[4,0],[4,1],[4,2],[3,2],[3,3],[4,3]],"longitudesPalabras":[3,4,5,3,5]},
@@ -219,6 +292,17 @@ const phraseSourceEl = document.getElementById('phraseSource');
 const statusEl = document.getElementById('status');
 const selectorEl = document.getElementById('selector');
 const hintBtnEl = document.getElementById('hintBtn');
+
+const shareOverlayEl = document.getElementById('shareOverlay');
+const shareMedalEl = document.getElementById('shareMedal');
+const shareFraseEl = document.getElementById('shareFrase');
+const shareFuenteEl = document.getElementById('shareFuente');
+const shareTimeEl = document.getElementById('shareTime');
+const shareHintsEl = document.getElementById('shareHints');
+const shareStreakEl = document.getElementById('shareStreak');
+const shareNextEl = document.getElementById('shareNext');
+const shareCopiedEl = document.getElementById('shareCopied');
+const GAME_URL = 'https://TU-USUARIO.github.io/letraberinto/'; // cambia esto por tu URL real
 
 let svg, gRects, gPath, gText;
 
@@ -251,6 +335,8 @@ function loadPuzzle(idx) {
   phraseSourceEl.textContent = "";
   phraseSourceEl.classList.remove('visible');
   hintBtnEl.disabled = false;
+  shareOverlayEl.classList.remove('visible');
+  if (typeof countdownInterval !== 'undefined') clearInterval(countdownInterval);
   buildBoard();
   renderAll();
   [...selectorEl.children].forEach((b, i) => b.classList.toggle('active', i === idx));
@@ -481,7 +567,122 @@ function onWin() {
       phraseSourceEl.classList.add('visible');
     }, 350);
   }
+  setTimeout(mostrarPantallaCompartir, 950);
 }
+
+// --- racha de dias jugados (localStorage) ---
+const STREAK_KEY = 'letraberinto_racha';
+
+function fechaStr(date) {
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
+function actualizarRacha() {
+  const hoy = new Date();
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+  const hoyStr = fechaStr(hoy);
+  const ayerStr = fechaStr(ayer);
+
+  let datos;
+  try {
+    datos = JSON.parse(localStorage.getItem(STREAK_KEY)) || { ultimaFecha: null, racha: 0 };
+  } catch (e) {
+    datos = { ultimaFecha: null, racha: 0 };
+  }
+
+  if (datos.ultimaFecha === hoyStr) {
+    // ya contaba hoy (no debería pasar salvo doble victoria), no tocar
+  } else if (datos.ultimaFecha === ayerStr) {
+    datos.racha += 1;
+  } else {
+    datos.racha = 1;
+  }
+  datos.ultimaFecha = hoyStr;
+  localStorage.setItem(STREAK_KEY, JSON.stringify(datos));
+  return datos.racha;
+}
+
+function calcularMedalla(pistas) {
+  if (pistas === 0) return { emoji: '🥇', texto: '¡Perfecto, sin pistas!' };
+  if (pistas <= 2) return { emoji: '🥈', texto: '¡Muy bien resuelto!' };
+  return { emoji: '🥉', texto: '¡Escapaste igualmente!' };
+}
+
+function msHastaManana() {
+  const ahora = new Date();
+  const manana = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate() + 1, 0, 0, 0);
+  return manana - ahora;
+}
+
+let countdownInterval = null;
+function actualizarCountdown() {
+  const ms = msHastaManana();
+  const h = String(Math.floor(ms / 3600000)).padStart(2, '0');
+  const m = String(Math.floor((ms % 3600000) / 60000)).padStart(2, '0');
+  const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+  shareNextEl.textContent = `Próximo laberinto en ${h}:${m}:${s}`;
+}
+
+function construirTextoCompartir(tiempoTxt, pistas, racha, medalla) {
+  const lineas = [
+    `Letraberinto ${medalla.emoji}`,
+    `⏱ ${tiempoTxt} · 💡 ${pistas} pista${pistas === 1 ? '' : 's'} · 🔥 racha ${racha}`,
+    GAME_URL,
+  ];
+  return lineas.join('\n');
+}
+
+function mostrarPantallaCompartir() {
+  const tiempoTxt = timerEl.textContent;
+  const racha = actualizarRacha();
+  const medalla = calcularMedalla(hintCount);
+
+  shareMedalEl.textContent = medalla.emoji;
+  shareFraseEl.textContent = puzzle.frase;
+  shareFuenteEl.textContent = puzzle.fuente ? `— ${puzzle.fuente}` : '';
+  shareTimeEl.textContent = tiempoTxt;
+  shareHintsEl.textContent = hintCount;
+  shareStreakEl.textContent = racha;
+  shareCopiedEl.textContent = '';
+
+  actualizarCountdown();
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(actualizarCountdown, 1000);
+
+  shareOverlayEl.classList.add('visible');
+
+  shareOverlayEl.dataset.tiempo = tiempoTxt;
+  shareOverlayEl.dataset.racha = racha;
+  shareOverlayEl.dataset.medalla = medalla.emoji;
+}
+
+document.getElementById('closeShareBtn').addEventListener('click', () => {
+  shareOverlayEl.classList.remove('visible');
+  clearInterval(countdownInterval);
+});
+
+document.getElementById('shareBtn').addEventListener('click', async () => {
+  const tiempoTxt = shareOverlayEl.dataset.tiempo;
+  const racha = shareOverlayEl.dataset.racha;
+  const medalla = { emoji: shareOverlayEl.dataset.medalla };
+  const texto = construirTextoCompartir(tiempoTxt, hintCount, racha, medalla);
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ text: texto });
+      return;
+    } catch (e) {
+      // el usuario cancelo el share nativo, o no soportado: seguir al portapapeles
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(texto);
+    shareCopiedEl.textContent = '✓ Copiado al portapapeles';
+  } catch (e) {
+    shareCopiedEl.textContent = 'No se pudo copiar automáticamente.';
+  }
+});
 
 let dragging = false;
 
@@ -585,11 +786,41 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   renderAll();
 });
 
-const FECHA_LANZAMIENTO = new Date('2026-07-10T00:00:00');
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// mezcla la semilla antes de usarla: mulberry32 no distribuye bien
+// semillas consecutivas (10,11,12...), esto evita que dias seguidos
+// tiendan a elegir el mismo puzzle
+function mezclarSeed(n) {
+  n = Math.imul(n ^ (n >>> 16), 2246822507);
+  n = Math.imul(n ^ (n >>> 13), 3266489909);
+  return (n ^ (n >>> 16)) >>> 0;
+}
+
+function fechaHoyStr() {
+  const hoy = new Date();
+  return `${hoy.getFullYear()}-${hoy.getMonth() + 1}-${hoy.getDate()}`;
+}
+
+// dias desde epoch (UTC), en dia LOCAL del jugador — igual que el conteo
+// tipo Wordle, se usa como seed para que el puzzle sea el mismo para
+// todo el mundo ese dia, pero elegido "al azar" (no secuencial) del total
+function diaEpoch() {
+  const hoy = new Date();
+  const utcMedianoche = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.floor(utcMedianoche / 86400000);
+}
+
 function indiceDelDia(total) {
-  const msPorDia = 24 * 60 * 60 * 1000;
-  const dias = Math.floor((Date.now() - FECHA_LANZAMIENTO) / msPorDia);
-  return ((dias % total) + total) % total;
+  const rng = mulberry32(mezclarSeed(diaEpoch()));
+  return Math.floor(rng() * total);
 }
 
 function construirSelectorDemo() {
