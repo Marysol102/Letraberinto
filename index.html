@@ -114,6 +114,34 @@
 
   .board-wrap { touch-action: pan-y; }
 
+  .game-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+  }
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+  }
+  @media (min-width: 800px) {
+    .game-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 36px;
+    }
+    .side-panel {
+      width: 320px;
+      max-width: 320px;
+      padding-top: 12px;
+    }
+  }
+
   .phrase-box {
     margin-top: 22px;
     min-height: 44px;
@@ -235,14 +263,18 @@
     <button class="hint-btn" id="hintBtn">💡<small>Pista</small></button>
   </div>
 
-  <div class="board-wrap" id="boardWrap"></div>
+  <div class="game-layout">
+    <div class="board-wrap" id="boardWrap"></div>
 
-  <div class="phrase-box">
-    <div class="txt empty" id="phraseTxt">···</div>
-    <div class="source" id="phraseSource"></div>
+    <div class="side-panel">
+      <div class="phrase-box">
+        <div class="txt empty" id="phraseTxt">···</div>
+        <div class="source" id="phraseSource"></div>
+      </div>
+      <div class="status" id="status"></div>
+      <button class="reset-btn" id="resetBtn">Reiniciar trazo</button>
+    </div>
   </div>
-  <div class="status" id="status"></div>
-  <button class="reset-btn" id="resetBtn">Reiniciar trazo</button>
 
   <div class="share-overlay" id="shareOverlay">
     <div class="share-card">
@@ -280,9 +312,29 @@ let startTime = null;
 let timerInterval = null;
 let hintCount = 0;
 let solved = false;
-const CELL = 62;
-const GAP = 6;
-const PAD = 55;
+let CELL = 62;
+let GAP = 6;
+let PAD = 55;
+
+function ajustarTamano() {
+  const filas = puzzle.filas, cols = puzzle.cols;
+  const esMovil = window.innerWidth < 800;
+  if (esMovil) {
+    const anchoDisp = Math.min(window.innerWidth - 24, 420);
+    // espacio vertical aproximado ocupado por cabecera, hud, frase, boton, margenes
+    const altoReservado = 430;
+    const altoDisp = Math.max(180, window.innerHeight - altoReservado);
+    const padM = 18, gapM = 4;
+    let celda = Math.floor(Math.min(
+      (anchoDisp - 2 * padM - (cols - 1) * gapM) / cols,
+      (altoDisp - 2 * padM - (filas - 1) * gapM) / filas
+    ));
+    celda = Math.max(26, Math.min(54, celda));
+    CELL = celda; GAP = gapM; PAD = padM;
+  } else {
+    CELL = 62; GAP = 6; PAD = 55;
+  }
+}
 
 const boardWrap = document.getElementById('boardWrap');
 const timerEl = document.getElementById('timer');
@@ -343,6 +395,7 @@ function loadPuzzle(idx) {
 }
 
 function buildBoard() {
+  ajustarTamano();
   const totalW = PAD * 2 + puzzle.cols * CELL + (puzzle.cols - 1) * GAP;
   const totalH = PAD * 2 + puzzle.filas * CELL + (puzzle.filas - 1) * GAP;
 
@@ -350,7 +403,7 @@ function buildBoard() {
   svg = svgEl('svg', { width: totalW, height: totalH, viewBox: `0 0 ${totalW} ${totalH}` });
 
   gRects = svgEl('g', {});
-  gPath = svgEl('g', {});
+  gPath = svgEl('g', { 'pointer-events': 'none' });
   gText = svgEl('g', {});
   svg.appendChild(gRects);
   svg.appendChild(gPath);
@@ -376,7 +429,7 @@ function buildBoard() {
       if (!blocked) {
         const t = svgEl('text', {
           x: x + CELL / 2, y: y + CELL / 2 + 8,
-          'text-anchor': 'middle', 'font-size': 26, 'font-weight': 800,
+          'text-anchor': 'middle', 'font-size': Math.round(CELL * 0.42), 'font-weight': 800,
           fill: 'var(--ink)', 'pointer-events': 'none'
         });
         t.textContent = puzzle.letras[key(rc)] || "";
@@ -481,7 +534,7 @@ function renderArrow() {
     ux = dx / segLen; uy = dy / segLen;
   }
 
-  const ARROW_LEN = 20, ARROW_HALF_WIDTH = 12;
+  const ARROW_LEN = CELL * 0.32, ARROW_HALF_WIDTH = CELL * 0.19;
   const shaftEnd = { x: tip.x - ux * ARROW_LEN, y: tip.y - uy * ARROW_LEN };
 
   // el eje del trazo se detiene justo antes de la punta, para que no
@@ -491,7 +544,7 @@ function renderArrow() {
   const shaftPts = pts.slice(0, -1).concat([shaftEnd]);
   const d = buildSmoothPath(shaftPts, CELL * 0.4);
   const line = svgEl('path', {
-    d, fill: 'none', stroke: '#4f7ea8', 'stroke-width': 8,
+    d, fill: 'none', stroke: '#4f7ea8', 'stroke-width': Math.max(4, Math.round(CELL * 0.13)),
     'stroke-linecap': 'butt', 'stroke-linejoin': 'round', opacity: 0.92
   });
   gPath.appendChild(line);
@@ -855,6 +908,14 @@ async function initApp() {
     loadPuzzle(0);
   }
 }
+
+let resizeTimeout = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    if (puzzle) { buildBoard(); renderAll(); }
+  }, 200);
+});
 
 initApp();
 </script>
