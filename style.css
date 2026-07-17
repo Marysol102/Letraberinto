@@ -1,0 +1,274 @@
+  :root {
+    --bg: #efe8da;
+    --panel: #ffffff;
+    --cell: #fbf7ec;
+    --cell-used: #dbe6ee;
+    --cell-border: #22201c;
+    --blocked: #1c1a17;
+    --start-ring: #4f7ea8;
+    --ink: #13273f;
+    --muted: #8d8474;
+    --accent: #4f7ea8;
+    --accent-dark: #2f5a7d;
+    --good: #3a9e6f;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+    overscroll-behavior-y: contain; /* evita el "pull to refresh" del navegador movil */
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 14px 60px;
+  }
+  .logo-wrap { display: flex; justify-content: center; margin-bottom: 6px; }
+  .logo-wrap img { width: 100%; max-width: 300px; height: auto; display: block; }
+  h1 { display: none; } /* se sustituye por el logo, se deja oculto por si hace falta como fallback semantico */
+  .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    text-align: center;
+  }
+  .selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .selector button {
+    background: var(--panel);
+    border: 1px solid #d8cfba;
+    color: var(--muted);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .selector button.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .demo-aviso {
+    width: 100%;
+    text-align: center;
+    font-size: 11px;
+    color: #b0403a;
+    background: #fbeceb;
+    border-radius: 8px;
+    padding: 5px 10px;
+    margin-bottom: 4px;
+  }
+  .hud {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    background: var(--panel);
+    border-radius: 14px;
+    padding: 10px 16px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  }
+  .hud-item { display: flex; flex-direction: column; align-items: center; min-width: 58px; }
+  .hud-item .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .hud-item .lbl { font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+  .hud-sep { width: 1px; height: 30px; background: #e3dcc9; }
+  .hint-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.1;
+  }
+  .hint-btn:active { transform: scale(0.96); }
+  .hint-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .hint-btn small { font-weight: 500; font-size: 9px; opacity: 0.85; }
+
+  .board-wrap { touch-action: pan-y; }
+
+  .game-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+  }
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+  }
+  @media (min-width: 800px) {
+    .game-layout {
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 36px;
+    }
+    .side-panel {
+      width: 320px;
+      max-width: 320px;
+      padding-top: 12px;
+    }
+  }
+
+  .phrase-box {
+    margin-top: 22px;
+    min-height: 44px;
+    max-width: 480px;
+    text-align: center;
+    padding: 10px 18px;
+    background: var(--panel);
+    border-radius: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+  }
+  .phrase-box .txt {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    min-height: 26px;
+  }
+  .phrase-box .txt.empty { color: #c7bda6; font-weight: 500; font-size: 14px; }
+  .phrase-box .txt.solved { color: var(--good); }
+  .phrase-box .source {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    margin-top: 4px;
+    min-height: 15px;
+    opacity: 0;
+    transform: translateY(-3px);
+    transition: opacity .4s ease, transform .4s ease;
+  }
+  .phrase-box .source.visible { opacity: 1; transform: translateY(0); }
+  .status { margin-top: 8px; font-size: 12px; color: var(--muted); text-align: center; }
+  .reset-btn {
+    margin-top: 14px;
+    background: none;
+    border: 1px solid #d8cfba;
+    color: var(--muted);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .share-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(19, 39, 63, 0.55);
+    backdrop-filter: blur(2px);
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .share-overlay.visible { display: flex; }
+  .share-card {
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 28px 26px 22px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: shareIn 0.35s ease;
+  }
+  @keyframes shareIn {
+    from { transform: translateY(16px) scale(0.97); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .share-medal { font-size: 44px; margin-bottom: 4px; }
+  .share-card h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 19px;
+    margin: 0 0 12px;
+    color: var(--ink);
+  }
+  .share-frase {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 800;
+    font-size: 17px;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .share-fuente { font-size: 12px; font-style: italic; color: var(--muted); margin-bottom: 16px; }
+  .share-stats { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; }
+  .share-stat .v { font-size: 20px; font-weight: 800; color: var(--ink); }
+  .share-stat .l { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+  .share-next { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+  .share-actions { display: flex; gap: 8px; justify-content: center; }
+  .share-actions button {
+    background: var(--accent); color: #fff; border: none; border-radius: 10px;
+    padding: 10px 16px; font-weight: 700; font-size: 13px; cursor: pointer;
+  }
+  .share-actions button.secondary { background: none; border: 1px solid var(--border); color: var(--muted); }
+  .share-copied { font-size: 11px; color: var(--good); margin-top: 8px; min-height: 14px; font-weight: 600; }
+
+/* ============================================================
+   Mejoras específicas de MÓVIL — no afectan a escritorio.
+   Todo va dentro de max-width:799px (el layout de escritorio
+   sigue activándose exactamente igual a partir de 800px).
+   ============================================================ */
+@media (max-width: 799px) {
+  body {
+    padding: 10px 8px 30px;
+  }
+  .logo-wrap {
+    margin-bottom: 2px;
+  }
+  .logo-wrap img {
+    max-width: 170px;
+  }
+  .subtitle {
+    margin-bottom: 10px;
+    font-size: 11px;
+  }
+  .selector {
+    margin-bottom: 10px;
+  }
+  .hud {
+    gap: 6px;
+    margin-bottom: 10px;
+    padding: 7px 10px;
+    border-radius: 12px;
+  }
+  .hud-item { min-width: 44px; }
+  .hud-item .val { font-size: 15px; }
+  .hud-item .lbl { font-size: 8px; }
+  .hud-sep { height: 24px; }
+  .hint-btn {
+    padding: 7px 12px;
+    font-size: 12px;
+  }
+  .game-layout { gap: 10px; }
+  .phrase-box { margin-top: 12px; padding: 8px 14px; }
+  .phrase-box .txt { font-size: 18px; }
+  .reset-btn { margin-top: 8px; }
+}
