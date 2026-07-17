@@ -18,7 +18,6 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     height: auto;
-    overscroll-behavior-y: contain; /* evita el "pull to refresh" del navegador movil */
   }
   body {
     margin: 0;
@@ -237,8 +236,11 @@
    sigue activándose exactamente igual a partir de 800px).
    ============================================================ */
 @media (max-width: 799px) {
+  html, body {
+    overscroll-behavior-y: contain; /* evita el "pull to refresh", solo en movil */
+  }
   body {
-    padding: 10px 8px 30px;
+    padding: 8px 8px 20px;
   }
   .logo-wrap {
     margin-bottom: 2px;

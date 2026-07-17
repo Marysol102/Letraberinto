@@ -21,18 +21,18 @@ function ajustarTamano() {
   const filas = puzzle.filas, cols = puzzle.cols;
   const esMovil = window.innerWidth < 800;
   if (esMovil) {
-    const anchoDisp = Math.min(window.innerWidth - 16, 460);
+    const anchoDisp = Math.min(window.innerWidth - 12, 480);
     // espacio vertical aprox. ocupado por cabecera, hud, frase, boton, margenes
-    // (reducido respecto a antes: en movil el HUD, el logo y los margenes
-    // ahora son mas compactos, asi que el tablero puede crecer mas)
-    const altoReservado = 340;
+    // (reducido: en movil el HUD, el logo y los margenes son mas compactos,
+    // asi que el tablero puede crecer mas)
+    const altoReservado = 300;
     const altoDisp = Math.max(180, window.innerHeight - altoReservado);
-    const padM = 14, gapM = 4;
+    const padM = 12, gapM = 4;
     let celda = Math.floor(Math.min(
       (anchoDisp - 2 * padM - (cols - 1) * gapM) / cols,
       (altoDisp - 2 * padM - (filas - 1) * gapM) / filas
     ));
-    celda = Math.max(26, Math.min(60, celda));
+    celda = Math.max(26, Math.min(66, celda));
     CELL = celda; GAP = gapM; PAD = padM;
   } else {
     CELL = 62; GAP = 6; PAD = 55;
