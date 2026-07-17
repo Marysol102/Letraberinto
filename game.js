@@ -58,7 +58,7 @@ const shareHintsEl = document.getElementById('shareHints');
 const shareStreakEl = document.getElementById('shareStreak');
 const shareNextEl = document.getElementById('shareNext');
 const shareCopiedEl = document.getElementById('shareCopied');
-const GAME_URL = 'https://goo.su/yfQOR'; // cambia esto por tu URL real
+const GAME_URL = 'https://goo.su/yfQOR';
 
 let svg, gRects, gPath, gText;
 
