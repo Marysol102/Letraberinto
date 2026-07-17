@@ -6,6 +6,7 @@ const PUZZLES_DEMO = [
 
 let PUZZLES = PUZZLES_DEMO;
 let modoDemo = true;
+let modoDios = false;
 
 let puzzle = null;
 let path = [];
@@ -25,7 +26,7 @@ function ajustarTamano() {
     // espacio vertical aprox. ocupado por cabecera, hud, frase, boton, margenes
     // (reducido: en movil el HUD, el logo y los margenes son mas compactos,
     // asi que el tablero puede crecer mas)
-    const altoReservado = 300;
+    const altoReservado = 320;
     const altoDisp = Math.max(180, window.innerHeight - altoReservado);
     const padM = 12, gapM = 4;
     let celda = Math.floor(Math.min(
@@ -87,14 +88,27 @@ function loadPuzzle(idx) {
   timerEl.textContent = "00:00";
   hintCountEl.textContent = "0";
   statusEl.textContent = "";
-  phraseSourceEl.textContent = "";
-  phraseSourceEl.classList.remove('visible');
+  const pista = textoPista(puzzle);
+  phraseSourceEl.textContent = pista;
+  phraseSourceEl.classList.toggle('visible', !!pista);
   hintBtnEl.disabled = false;
   shareOverlayEl.classList.remove('visible');
   if (typeof countdownInterval !== 'undefined') clearInterval(countdownInterval);
   buildBoard();
   renderAll();
   [...selectorEl.children].forEach((b, i) => b.classList.toggle('active', i === idx));
+  if (modoDios) {
+    // vista previa instantanea de la frase resuelta, sin contar como partida jugada
+    path = puzzle.solucion.slice();
+    renderAll();
+  }
+}
+
+function textoPista(p) {
+  const partes = [];
+  if (p.categoria) partes.push(p.categoria);
+  if (p.fuente) partes.push(p.fuente);
+  return partes.length ? `Pista: ${partes.join(' — ')}` : '';
 }
 
 function buildBoard() {
@@ -317,12 +331,6 @@ function onWin() {
   clearInterval(timerInterval);
   statusEl.textContent = `Resuelto con ${hintCount} pista(s).`;
   renderAll();
-  if (puzzle.fuente) {
-    setTimeout(() => {
-      phraseSourceEl.textContent = `— ${puzzle.fuente}`;
-      phraseSourceEl.classList.add('visible');
-    }, 350);
-  }
   setTimeout(mostrarPantallaCompartir, 950);
 }
 
@@ -624,5 +632,64 @@ window.addEventListener('resize', () => {
     if (puzzle) { buildBoard(); renderAll(); }
   }, 200);
 });
+
+// --- modo dios: activar con el codigo Konami o 6 clics en el logo ---
+// Muestra un selector con TODAS las frases (aunque haya puzzles.json real)
+// y precarga cada una ya resuelta, para poder revisar rapido como queda
+// el texto/fuente de cada frase sin tener que jugarla entera.
+function construirSelectorGodMode() {
+  selectorEl.innerHTML = '';
+  const aviso = document.createElement('div');
+  aviso.className = 'demo-aviso';
+  aviso.textContent = '🔓 Modo dios: vista previa de todas las frases.';
+  selectorEl.appendChild(aviso);
+  PUZZLES.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.textContent = `${i + 1}`;
+    b.title = [p.categoria, p.fuente].filter(Boolean).join(' — ');
+    b.addEventListener('click', () => loadPuzzle(i));
+    selectorEl.appendChild(b);
+  });
+}
+
+function activarModoDios() {
+  modoDios = !modoDios;
+  if (modoDios) {
+    construirSelectorGodMode();
+    loadPuzzle(0);
+  } else {
+    selectorEl.innerHTML = '';
+    initApp();
+  }
+}
+
+const KONAMI = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'KeyB', 'KeyA'];
+let konamiPos = 0;
+document.addEventListener('keydown', e => {
+  if (e.code === KONAMI[konamiPos]) {
+    konamiPos++;
+    if (konamiPos === KONAMI.length) {
+      konamiPos = 0;
+      activarModoDios();
+    }
+  } else {
+    konamiPos = e.code === KONAMI[0] ? 1 : 0;
+  }
+});
+
+let logoClicks = 0;
+let logoClickTimeout = null;
+const logoImgEl = document.querySelector('.logo-wrap img');
+if (logoImgEl) {
+  logoImgEl.addEventListener('click', () => {
+    logoClicks++;
+    clearTimeout(logoClickTimeout);
+    logoClickTimeout = setTimeout(() => { logoClicks = 0; }, 2500);
+    if (logoClicks >= 6) {
+      logoClicks = 0;
+      activarModoDios();
+    }
+  });
+}
 
 initApp();
