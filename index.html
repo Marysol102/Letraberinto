@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Letraberinto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="logo-wrap"><img src="assets/logo.webp" alt="Letraberinto"></div>
+  <h1>Letraberinto</h1>
+  <div class="subtitle">Empieza en la celda marcada y traza un camino que use todas las letras hasta encontrar la frase que te saque del laberinto.<br>Arrastra para dibujar, retrocede tocando la celda anterior.</div>
+
+  <div class="selector" id="selector"></div>
+
+  <div class="hud">
+    <div class="hud-item">
+      <div class="val" id="timer">00:00</div>
+      <div class="lbl">Tiempo</div>
+    </div>
+    <div class="hud-sep"></div>
+    <div class="hud-item">
+      <div class="val" id="hintCount">0</div>
+      <div class="lbl">Pistas</div>
+    </div>
+    <div class="hud-sep"></div>
+    <button class="hint-btn" id="hintBtn">💡<small>Pista</small></button>
+  </div>
+
+  <div class="game-layout">
+    <div class="board-wrap" id="boardWrap"></div>
+
+    <div class="side-panel">
+      <div class="phrase-box">
+        <div class="txt empty" id="phraseTxt">···</div>
+        <div class="source" id="phraseSource"></div>
+      </div>
+      <div class="status" id="status"></div>
+      <button class="reset-btn" id="resetBtn">Reiniciar trazo</button>
+    </div>
+  </div>
+
+  <div class="share-overlay" id="shareOverlay">
+    <div class="share-card">
+      <div class="share-medal" id="shareMedal">🥇</div>
+      <h2>¡Escapaste del laberinto!</h2>
+      <div class="share-frase" id="shareFrase"></div>
+      <div class="share-fuente" id="shareFuente"></div>
+      <div class="share-stats">
+        <div class="share-stat"><div class="v" id="shareTime">00:00</div><div class="l">Tiempo</div></div>
+        <div class="share-stat"><div class="v" id="shareHints">0</div><div class="l">Pistas</div></div>
+        <div class="share-stat"><div class="v" id="shareStreak">1</div><div class="l">🔥 Racha</div></div>
+      </div>
+      <div class="share-next" id="shareNext"></div>
+      <div class="share-actions">
+        <button id="shareBtn">Compartir resultado</button>
+        <button class="secondary" id="closeShareBtn">Cerrar</button>
+      </div>
+      <div class="share-copied" id="shareCopied"></div>
+    </div>
+  </div>
+
+<script src="game.js" defer></script>
+</body>
+</html>
