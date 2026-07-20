@@ -11,6 +11,7 @@ let modoDios = false;
 let puzzle = null;
 let path = [];
 let startTime = null;
+let empezado = false;
 let timerInterval = null;
 let hintCount = 0;
 let solved = false;
@@ -84,6 +85,7 @@ function loadPuzzle(idx) {
   hintCount = 0;
   solved = false;
   startTime = null;
+  empezado = modoDios; // en modo dios se ve todo revelado directamente
   clearInterval(timerInterval);
   timerEl.textContent = "00:00";
   hintCountEl.textContent = "0";
@@ -149,10 +151,10 @@ function buildBoard() {
           'text-anchor': 'middle', 'font-size': Math.round(CELL * 0.42), 'font-weight': 800,
           fill: 'var(--ink)', 'pointer-events': 'none'
         });
-        t.textContent = puzzle.letras[key(rc)] || "";
+        t.textContent = empezado ? (puzzle.letras[key(rc)] || "") : "";
         gText.appendChild(t);
 
-        if (sameCell(rc, puzzle.inicio)) {
+        if (empezado && sameCell(rc, puzzle.inicio)) {
           const ring = svgEl('circle', {
             cx: x + CELL / 2, cy: y + CELL / 2, r: CELL * 0.34,
             fill: 'none', stroke: 'var(--start-ring)', 'stroke-width': 4,
@@ -163,6 +165,22 @@ function buildBoard() {
       }
     }
   }
+
+  if (!empezado) {
+    const overlay = document.createElement('div');
+    overlay.className = 'board-start-overlay';
+    overlay.innerHTML = '<span>▶ Toca para empezar</span>';
+    overlay.addEventListener('click', empezarPuzzle);
+    boardWrap.appendChild(overlay);
+  }
+}
+
+function empezarPuzzle() {
+  if (empezado) return;
+  empezado = true;
+  buildBoard();
+  renderAll();
+  startTimerIfNeeded();
 }
 
 function renderCellFills() {
